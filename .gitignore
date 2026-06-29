@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
+
+# 前端依赖
+frontend/node_modules/
+
+# 环境配置（含 AI_API_KEY，禁止提交）
+backend/.env
+
+# 数据库（个人数据，不入版本库）
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# 临时与日志
+backend/tmp/
+backend/server.log
+backend/server.err
+frontend/vite.log
+frontend/vite.err
+
+# 题源数据文件（数据，非代码）
+*.docx
+*.doc
+*.pdf
