@@ -11,8 +11,7 @@ frontend/node_modules/
 # 环境配置（含 AI_API_KEY，禁止提交）
 backend/.env
 
-# 数据库（个人数据，不入版本库）
-data/*.db
+# SQLite 临时文件（主 db 入库用于版本管理，wal/shm 不传）
 data/*.db-wal
 data/*.db-shm
 
@@ -23,7 +22,7 @@ backend/server.err
 frontend/vite.log
 frontend/vite.err
 
-# 题源数据文件（数据，非代码）
+# 题源数据文件（数据，非代码，不上传）
 *.docx
 *.doc
 *.pdf
