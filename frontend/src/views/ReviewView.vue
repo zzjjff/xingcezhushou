@@ -91,6 +91,8 @@ import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import { getReview, updateQuestion, aiExplain } from '../api'
 
+const MODULE_ORDER = ['政治理论','常识判断','言语理解与表达','数量关系','判断推理','资料分析']
+
 const loading = ref(false)
 const data = ref(null)
 const empty = ref(false)
@@ -124,21 +126,25 @@ const renderCharts = () => {
   if (!mods.length) return
 
   if (radarEl.value) {
+    const byName = {}
+    mods.forEach(m => { byName[m.module] = m })
     const c = echarts.init(radarEl.value)
     c.setOption({
       tooltip: {},
-      radar: { indicator: mods.map(m => ({ name: m.module, max: 1 })) },
-      series: [{ type: 'radar', data: [{ value: mods.map(m => m.accuracy), name: '正确率', areaStyle: {} }] }],
+      radar: { indicator: MODULE_ORDER.map(m => ({ name: m, max: 1 })) },
+      series: [{ type: 'radar', data: [{ value: MODULE_ORDER.map(m => (byName[m] ? byName[m].accuracy : 0)), name: '正确率', areaStyle: {} }] }],
     })
     charts.push(c)
   }
   if (barEl.value) {
+    const byName = {}
+    mods.forEach(m => { byName[m.module] = m })
     const c = echarts.init(barEl.value)
     c.setOption({
       tooltip: {},
-      xAxis: { type: 'category', data: mods.map(m => m.module), axisLabel: { interval: 0, rotate: 20 } },
+      xAxis: { type: 'category', data: MODULE_ORDER, axisLabel: { interval: 0, rotate: 20 } },
       yAxis: { type: 'value', name: '秒' },
-      series: [{ type: 'bar', data: mods.map(m => m.avg_time), itemStyle: { color: '#409eff' } }],
+      series: [{ type: 'bar', data: MODULE_ORDER.map(m => (byName[m] ? byName[m].avg_time : 0)), itemStyle: { color: '#409eff' } }],
     })
     charts.push(c)
   }

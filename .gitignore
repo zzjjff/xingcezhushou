@@ -26,3 +26,6 @@ frontend/vite.err
 *.docx
 *.doc
 *.pdf
+
+# 启动脚本 PID 记录
+.pids

@@ -15,6 +15,8 @@
         <router-link to="/wrong-book" custom v-slot="{ navigate, isActive }">
           <button :class="['nav-btn', { active: isActive }]" @click="navigate">错题本</button>
         </router-link>
+        <button v-if="!isAdmin" class="nav-btn nav-login" @click="goLogin">登录</button>
+        <button v-else class="nav-btn nav-login" @click="logout">退出管理</button>
       </nav>
     </header>
     <main class="app-main">
@@ -24,6 +26,21 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+const isAdmin = computed(() => !!localStorage.getItem('admin_token'))
+
+const goLogin = () => router.push('/login')
+const logout = () => {
+  localStorage.removeItem('admin_token')
+  // 退出后若在题库管理页，跳到做题页
+  if (route.path === '/questions') router.push('/exam')
+  location.reload()
+}
+
 </script>
 
 <style>

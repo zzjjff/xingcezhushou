@@ -3,10 +3,11 @@
     <el-card shadow="never" class="panel">
       <div class="toolbar">
         <div class="toolbar-left">
-          <el-select v-model="moduleFilter" placeholder="全部模块" clearable style="width:180px" @change="onFilterChange">
+          <el-select v-if="isAdmin" v-model="moduleFilter" placeholder="全部模块" clearable style="width:180px" @change="onFilterChange">
             <el-option v-for="m in modules" :key="m" :label="m" :value="m" />
           </el-select>
-          <el-button @click="loadList">刷新</el-button>
+          <el-button v-if="isAdmin" @click="loadList">刷新</el-button>
+          <span v-if="!isAdmin" class="muted-tip">管理员登录后可查看/管理题库</span>
         </div>
         <div class="toolbar-right">
           <el-upload
@@ -19,36 +20,39 @@
         </div>
       </div>
 
-      <el-table :data="list" v-loading="loading" border style="margin-top:16px">
-        <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="content" label="题干" min-width="240" show-overflow-tooltip />
-        <el-table-column prop="module" label="模块" width="120" />
-        <el-table-column prop="answer" label="答案" width="70" />
-        <el-table-column prop="difficulty" label="难度" width="70" />
-        <el-table-column label="掌握度" width="90">
-          <template #default="{ row }">
-            {{ row.mastery_score != null ? row.mastery_score.toFixed(0) : '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="source_file" label="来源" width="140" show-overflow-tooltip />
-        <el-table-column label="操作" width="140" fixed="right">
-          <template #default="{ row }">
-            <el-button text type="primary" @click="openEditAnswer(row)">改答案</el-button>
-            <el-button text type="danger" @click="handleDelete(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <!-- 仅管理员可见：题库列表 -->
+      <template v-if="isAdmin">
+        <el-table :data="list" v-loading="loading" border style="margin-top:16px">
+          <el-table-column prop="id" label="ID" width="70" />
+          <el-table-column prop="content" label="题干" min-width="240" show-overflow-tooltip />
+          <el-table-column prop="module" label="模块" width="120" />
+          <el-table-column prop="answer" label="答案" width="70" />
+          <el-table-column prop="difficulty" label="难度" width="70" />
+          <el-table-column label="掌握度" width="90">
+            <template #default="{ row }">
+              {{ row.mastery_score != null ? row.mastery_score.toFixed(0) : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="source_file" label="来源" width="140" show-overflow-tooltip />
+          <el-table-column label="操作" width="140" fixed="right">
+            <template #default="{ row }">
+              <el-button text type="primary" @click="openEditAnswer(row)">改答案</el-button>
+              <el-button text type="danger" @click="handleDelete(row.id)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <el-pagination
-        class="pager"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        @size-change="onFilterChange"
-        @current-change="loadList"
-      />
+        <el-pagination
+          class="pager"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          :total="total"
+          :page-sizes="[10, 20, 50]"
+          layout="total, sizes, prev, pager, next"
+          @size-change="onFilterChange"
+          @current-change="loadList"
+        />
+      </template>
     </el-card>
 
     <!-- 解析预览弹窗 -->
@@ -107,6 +111,9 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getQuestions, getModules, deleteQuestion, uploadFile, parseQuestions, batchImport, updateQuestion } from '../api'
 
+// 管理员权限：有 token 才显示题库列表/删除/改答案；普通用户仅能上传
+const isAdmin = ref(!!localStorage.getItem('admin_token'))
+
 const list = ref([])
 const total = ref(0)
 const loading = ref(false)
@@ -116,6 +123,7 @@ const moduleFilter = ref('')
 const modules = ref([])
 
 const loadList = async () => {
+  if (!isAdmin.value) return
   loading.value = true
   try {
     const res = await getQuestions({
@@ -126,7 +134,13 @@ const loadList = async () => {
     list.value = res.data.items
     total.value = res.data.total
   } catch (e) {
-    ElMessage.error('加载题目列表失败')
+    if (e.response?.status === 401) {
+      // token 失效，降级为普通用户
+      isAdmin.value = false
+      localStorage.removeItem('admin_token')
+    } else {
+      ElMessage.error('加载题目列表失败')
+    }
   } finally {
     loading.value = false
   }
@@ -186,7 +200,7 @@ const handleBatchImport = async () => {
     const res = await batchImport(parseResult.value.items)
     ElMessage.success(`入库完成：新增 ${res.data.inserted}，跳过重复 ${res.data.skipped}`)
     parseResult.value.visible = false
-    loadList()
+    if (isAdmin.value) loadList()
     loadModules()
   } catch (e) {
     ElMessage.error('入库失败')
@@ -235,10 +249,11 @@ onMounted(() => {
 .questions-view { max-width: 1100px; margin: 0 auto; }
 .panel { border-radius: 8px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; }
-.toolbar-left { display: flex; gap: 8px; }
+.toolbar-left { display: flex; gap: 8px; align-items: center; }
 .pager { margin-top: 16px; justify-content: flex-end; }
 .hint { color: #909399; font-size: 12px; margin-top: 8px; }
 .muted { color: #c0c4cc; }
+.muted-tip { color: #909399; font-size: 14px; }
 .parse-head { display: flex; justify-content: space-between; align-items: center; }
 .edit-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
 .edit-label { width: 48px; color: #606266; line-height: 32px; flex-shrink: 0; }

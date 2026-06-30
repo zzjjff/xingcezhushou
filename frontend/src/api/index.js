@@ -5,6 +5,13 @@ const api = axios.create({
   timeout: 30000
 })
 
+// 请求拦截器：自动带管理员 token（若有）
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('admin_token')
+  if (token) config.headers.Authorization = 'Bearer ' + token
+  return config
+})
+
 export default api
 
 // 题库相关接口（对应后端 routers/questions.py）
@@ -50,3 +57,5 @@ export const practiceOne = (qid) => api.post('/exam/practice_one', null, { param
 // 错题本
 export const getWrongBook = (module) => api.get('/exam/wrong_book', { params: module ? { module } : {} })
 
+// 管理员登录
+export const login = (password) => api.post('/auth/login', { password })

@@ -20,7 +20,7 @@ def build_review(db: Session, days: int = 30) -> Dict[str, Any]:
         func.count(PracticeRecord.id),
         func.coalesce(func.sum(PracticeRecord.is_correct), 0),
         func.coalesce(func.avg(PracticeRecord.time_spent_seconds), 0),
-    ).join(Question, Question.id == PracticeRecord.question_id) \
+    ).outerjoin(PracticeRecord, PracticeRecord.question_id == Question.id) \
      .filter(Question.module.isnot(None)) \
      .group_by(Question.module).all()
 
@@ -57,7 +57,7 @@ def build_review(db: Session, days: int = 30) -> Dict[str, Any]:
              for k, v in sorted(day_map.items())]
 
     # 错题列表（最近）
-    wrong = db.query(PracticeRecord, Question).join(Question, Question.id == PracticeRecord.question_id) \
+    wrong = db.query(PracticeRecord, Question).outerjoin(PracticeRecord, PracticeRecord.question_id == Question.id) \
         .filter(PracticeRecord.is_correct == False) \
         .order_by(PracticeRecord.practiced_at.desc()).limit(50).all()
     wrong_questions = [{

@@ -32,3 +32,5 @@ AI_MODEL = os.getenv('AI_MODEL', 'deepseek-chat').strip()
 
 def has_ai_key() -> bool:
     return bool(AI_API_KEY)
+
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '').strip()

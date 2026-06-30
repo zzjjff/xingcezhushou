@@ -48,14 +48,16 @@
       <div class="stem">{{ current.content }}</div>
 
       <div class="options">
-        <el-radio-group v-model="answers[current.id]" @change="onAnswer">
-          <el-radio
-            v-for="opt in optionList(current)"
-            :key="opt.key"
-            :label="opt.key"
-            class="option-item"
-          >{{ opt.key }}、{{ opt.text }}</el-radio>
-        </el-radio-group>
+        <div
+          v-for="opt in optionList(current)"
+          :key="opt.key"
+          class="opt-row"
+          :class="{ selected: answers[current.id] === opt.key }"
+          @click="answers[current.id] = opt.key"
+        >
+          <span class="opt-key">{{ opt.key }}</span>
+          <span class="opt-text" :title="opt.text">{{ opt.text }}</span>
+        </div>
       </div>
 
       <div class="exam-foot">
@@ -305,9 +307,16 @@ onUnmounted(stopTimer)
 .timer-limit.overtime { color: #f56c6c; }
 .answered-count { margin-left: auto; }
 .stem { font-size: 16px; line-height: 1.8; margin: 16px 0; color: #303133; white-space: pre-wrap; }
-.options { display: flex; flex-direction: column; gap: 10px; }
-.option-item { display: flex; align-items: flex-start; margin: 0; }
-.option-item :deep(.el-radio__label) { white-space: normal; line-height: 1.6; }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.opt-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; border: 1px solid #dcdfe6; border-radius: 6px;
+  cursor: pointer; transition: all .15s;
+}
+.opt-row:hover { border-color: #409eff; }
+.opt-row.selected { border-color: #409eff; background: #ecf5ff; }
+.opt-key { font-weight: bold; color: #409eff; flex-shrink: 0; width: 18px; }
+.opt-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #303133; }
 .exam-foot { margin-top: 20px; display: flex; gap: 8px; }
 .muted { color: #909399; }
 </style>

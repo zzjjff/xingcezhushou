@@ -3,6 +3,7 @@ import QuestionsView from '../views/QuestionsView.vue'
 
 const routes = [
   { path: '/', redirect: '/questions' },
+  { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { title: '登录' } },
   { path: '/questions', name: 'questions', component: QuestionsView, meta: { title: '题库管理' } },
   { path: '/exam', name: 'exam', component: () => import('../views/ExamView.vue'), meta: { title: '做题' } },
   { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue'), meta: { title: '复盘' } },

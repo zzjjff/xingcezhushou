@@ -173,3 +173,11 @@ class WrongBookItem(BaseModel):
     last_practice_at: Optional[str] = None
     wrong_count: int
 
+# ============ 认证相关 ============
+
+class LoginRequest(BaseModel):
+    password: str
+
+class TokenResponse(BaseModel):
+    token: str
+    role: str

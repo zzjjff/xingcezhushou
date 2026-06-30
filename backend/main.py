@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from database import engine, Base
 from routers import questions
+from routers import auth
 from routers import exam
 
 
@@ -36,6 +37,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(questions.router)
+app.include_router(auth.router)
 app.include_router(exam.router)
 
 

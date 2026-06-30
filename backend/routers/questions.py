@@ -13,6 +13,7 @@ from schemas import (
 )
 from services.parser import parse_file
 from services.question_parser import parse_text_to_questions
+from routers.auth import require_admin
 from config import has_ai_key
 from services.ai_client import call_llm, AIConfigError
 from services.prompts import build_complete_prompt, BATCH_SIZE
@@ -43,7 +44,7 @@ def _create_one(db: Session, question: QuestionCreate) -> bool:
 
 
 @router.post("", response_model=QuestionResponse)
-def create_question(question: QuestionCreate, db: Session = Depends(get_db)):
+def create_question(question: QuestionCreate, db: Session = Depends(get_db), admin: bool = Depends(require_admin)):
     """创建单道题目"""
     question = _fill_placeholder(question)
     db_question = Question(**question.model_dump())
@@ -63,7 +64,7 @@ def list_questions(
     module: Optional[str] = Query(None, description="按模块筛选"),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db), admin: bool = Depends(require_admin)
 ):
     """题目列表查询"""
     query = db.query(Question)
@@ -181,7 +182,7 @@ def ai_explain_one(question_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{question_id}", response_model=QuestionResponse)
-def get_question(question_id: int, db: Session = Depends(get_db)):
+def get_question(question_id: int, db: Session = Depends(get_db), admin: bool = Depends(require_admin)):
     """获取单道题目详情"""
     q = db.query(Question).filter(Question.id == question_id).first()
     if not q:
@@ -207,7 +208,7 @@ def get_question(question_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{question_id}", response_model=QuestionResponse)
-def update_question(question_id: int, req: QuestionUpdate, db: Session = Depends(get_db)):
+def update_question(question_id: int, req: QuestionUpdate, db: Session = Depends(get_db), admin: bool = Depends(require_admin)):
     """更新题目（答案录入/解析补充）。仅更新非 None 字段。"""
     q = db.query(Question).filter(Question.id == question_id).first()
     if not q:
@@ -241,7 +242,7 @@ def update_question(question_id: int, req: QuestionUpdate, db: Session = Depends
 
 
 @router.delete("/{question_id}")
-def delete_question(question_id: int, db: Session = Depends(get_db)):
+def delete_question(question_id: int, db: Session = Depends(get_db), admin: bool = Depends(require_admin)):
     """删除题目"""
     q = db.query(Question).filter(Question.id == question_id).first()
     if not q:
